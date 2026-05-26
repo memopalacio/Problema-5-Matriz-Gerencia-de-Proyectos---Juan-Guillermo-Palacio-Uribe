@@ -1,0 +1,203 @@
+# =====================================================================
+# CURSO: Fundamentos de Programación 
+# FASE 5: Evaluación Final POA
+# AUTORIA CODIGO FUENTE: Juan Guillermo Palacio Uribe
+# GRUPO:213022A_580
+# PROBLEMA SELECCIONADO: Problema 3 - Auditoría de Inventario
+# ENFOQUE: Inventario Permanente con Cantidad Inicial de Existencia
+# =====================================================================
+
+from datetime import datetime  # Librería para capturar fecha y hora
+
+
+# --- PASO 1: MÓDULO O FUNCIÓN EXIGIDA POR LA GUÍA ---
+def calcular_cantidad_a_pedir(stock_actual, cantidad_inicial):
+    """
+    Compara el stock actual contra la Cantidad Inicial de Existencia.
+    Si el stock actual es menor, calcula cuántas unidades faltan para
+    restablecer el inventario al tope inicial.
+    """
+    if stock_actual < cantidad_inicial:
+        return cantidad_inicial - stock_actual
+    else:
+        return 0
+
+
+# --- PASO 2: FUNCIÓN AUXILIAR PARA MOSTRAR LA TABLA INTERACTIVA ---
+def mostrar_inventario_automatico(matriz):
+    """
+    Muestra el estado en tiempo real. Modifica los encabezados según lo solicitado:
+    CANT. INICIAL reemplaza a Stock Mínimo para actuar como tope permanente.
+    """
+    print(f"\n{'ÍNDICE':<8}{'CÓDIGO':<10}{'ARTÍCULO':<25}{'STOCK ACT':<12}{'CANT. INICIAL':<15}")
+    print("-" * 70)
+    for i, art in enumerate(matriz):
+        print(f"[{i+1}]      {art[0]:<10}{art[1]:<25}{art[2]:<12}{art[3]:<15}")
+    print("-" * 70)
+
+
+# --- NUEVA FUNCIÓN: REGISTRO DE AUDITORÍA DE USUARIO (LOGS) ---
+def registrar_accion(usuario, accion):
+    """
+    Captura el nombre del usuario, la acción realizada y la estampa de tiempo exacta.
+    Muestra la confirmación en consola (y sirve como bitácora de auditoría).
+    """
+    ahora = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"\n[AUDITORÍA] HORA: {ahora} | USUARIO: {usuario} | ACCIÓN: {accion}")
+
+
+# --- PASO 3: PROGRAMA PRINCIPAL ---
+def main():
+    # -----------------------------------------------------------------
+    # CONFIGURACIÓN DEL PERFIL DE USUARIO (OBLIGATORIO)
+    # -----------------------------------------------------------------
+    print("=========================================================")
+    print("         CONFIGURACIÓN DEL PERFIL DE USUARIO            ")
+    print("=========================================================")
+    
+    # Bucle de validación: Bloquea el avance hasta recibir datos válidos
+    while True:
+        nombre_usuario = input("Por favor, ingrese su nombre y apellido: ").strip()
+        
+        if nombre_usuario:  # Si la cadena no está vacía, rompe el ciclo
+            break
+        else:
+            print(" x Error: El nombre de usuario no puede estar vacío. Inténtelo de nuevo.\n")
+    
+    print(f"\n¡Bienvenido al sistema de Auditoria, {nombre_usuario}!")
+
+    # Estructura de Datos: Matriz permanente con 5 artículos.
+    # Formato: [Código, Nombre, Stock Actual, Cantidad Inicial de Existencia]
+    matriz_inventario = [
+        ["A001", "Cable UTP Cat 6", 50, 50],
+        ["A002", "Conectores RJ45", 100, 100],
+        ["A003", "Router Balanceador", 5, 5],
+        ["A004", "Switch Administrable", 8, 8],
+        ["A005", "Patch Panel 24 P", 10, 10]
+    ]
+
+    while True:
+        print("\n=========================================================")
+        print("     SISTEMA DE INVENTARIO CON CANTIDAD INICIAL FIJA     ")
+        print(f"     Sesión activa: {nombre_usuario}                     ")
+        print("=========================================================")
+        print("1. Consultar Stock Actual (Ver Inventario Base)")
+        print("2. Registrar Retiro de Stock (Salida de material)")
+        print("3. Restablecer / Reabastecer Stock (Entrada de material)")
+        print("4. Generar Informe de Auditoría General (Pedidos Requeridos)")
+        print("5. Salir del Programa")
+        print("=========================================================")
+        
+        opcion = input("Seleccione una opción (1-5): ")
+
+        # -----------------------------------------------------------------
+        # ITEM 1: CONSULTA DE INVENTARIO
+        # -----------------------------------------------------------------
+        if opcion == "1":
+            print("\n>>> CONSULTA GENERAL - ESTADO ACTUAL DEL INVENTARIO:")
+            mostrar_inventario_automatico(matriz_inventario)
+            registrar_accion(nombre_usuario, "Consultó el estado general del inventario.")
+
+        # -----------------------------------------------------------------
+        # ITEM 2: RETIRO CONTROLADO (CAMBIO EN MATRIZ)
+        # -----------------------------------------------------------------
+        elif opcion == "2":
+            print("\n>>> REGISTRAR RETIRO DE MATERIAL:")
+            mostrar_inventario_automatico(matriz_inventario)
+            
+            try:
+                seleccion = int(input(f"Seleccione el número del índice (1-{len(matriz_inventario)}): "))
+                if 1 <= seleccion <= len(matriz_inventario):
+                    idx = seleccion - 1
+                    articulo_elegido = matriz_inventario[idx]
+                    
+                    print(f"\nSeleccionó: {articulo_elegido[0]} - {articulo_elegido[1]} (Stock actual: {articulo_elegido[2]})")
+                    cantidad_retirar = int(input("¿Cuántas unidades desea retirar?: "))
+                    
+                    if cantidad_retirar <= articulo_elegido[2]:
+                        articulo_elegido[2] -= cantidad_retirar  # Modificación de la matriz
+                        print(f"\n✅ ¡Retiro exitoso! Nuevo stock de {articulo_elegido[1]}: {articulo_elegido[2]} unidades.")
+                        
+                        registrar_accion(nombre_usuario, f"Retiró {cantidad_retirar} unidades de {articulo_elegido[1]} (Código: {articulo_elegido[0]}).")
+                        
+                        auditoria_item = calcular_cantidad_a_pedir(articulo_elegido[2], articulo_elegido[3])
+                        print("-" * 60)
+                        print(f" RESULTADO INMEDIATO DE AUDITORÍA:")
+                        print(f" >> CANTIDAD A SOLICITAR PARA VOLVER AL TOPE: {auditoria_item} <<")
+                        print("-" * 60)
+                    else:
+                        print("\n x Error: No puedes retirar más de lo disponible en el stock actual.")
+                else:
+                    print("\n x Error: El número de índice seleccionado no pertenece al inventario.")
+            except ValueError:
+                print("\n x Error: Debe ingresar un número entero válido.")
+
+        # -----------------------------------------------------------------
+        # ITEM 3: RESTABLECER STOCK EN LA MATRIZ PERMANENTE
+        # -----------------------------------------------------------------
+        elif opcion == "3":
+            print("\n>>> RESTABLECER O REABASTECER STOCK:")
+            mostrar_inventario_automatico(matriz_inventario)
+            
+            try:
+                seleccion = int(input(f"Seleccione el número del índice (1-{len(matriz_inventario)}): "))
+                if 1 <= seleccion <= len(matriz_inventario):
+                    idx = seleccion - 1
+                    articulo_elegido = matriz_inventario[idx]
+                    
+                    print(f"\nSeleccionó: {articulo_elegido[0]} - {articulo_elegido[1]} (Stock actual: {articulo_elegido[2]} / Cantidad Inicial: {articulo_elegido[3]})")
+                    cantidad_ingresar = int(input("¿Cuántas unidades va a ingresar para reabastecer?: "))
+                    
+                    if cantidad_ingresar > 0:
+                        articulo_elegido[2] += cantidad_ingresar  # Modificación de la matriz
+                        print(f"\n✅ ¡Reabastecimiento exitoso! Nuevo stock de {articulo_elegido[1]}: {articulo_elegido[2]} unidades.")
+                        
+                        registrar_accion(nombre_usuario, f"Reabasteció {cantidad_ingresar} unidades de {articulo_elegido[1]} (Código: {articulo_elegido[0]}).")
+                        
+                        auditoria_item = calcular_cantidad_a_pedir(articulo_elegido[2], articulo_elegido[3])
+                        print("-" * 60)
+                        print(f" RESULTADO INMEDIATO DE AUDITORÍA:")
+                        print(f" >> CANTIDAD A SOLICITAR PARA VOLVER AL TOPE: {auditoria_item} <<")
+                        print("-" * 60)
+                    else:
+                        print("\n x Error: La cantidad a ingresar debe ser mayor a cero.")
+                else:
+                    print("\n x Error: El número de índice seleccionado no pertenece al inventario.")
+            except ValueError:
+                print("\n x Error: Debe ingresar un número entero válido.")
+
+        # -----------------------------------------------------------------
+        # ITEM 4: GENERAR INFORME REAL BASADO EN LA CANTIDAD INICIAL EXIGIDA
+        # -----------------------------------------------------------------
+        elif opcion == "4":
+            print("\n=========================================================")
+            print("  INFORME DE PEDIDOS REQUERIDOS (AUDITORÍA DE INVENTARIO) ")
+            print("=========================================================")
+            print(f"{'ARTÍCULO':<25}{'CANTIDAD SOLICITADA'}")
+            print("-" * 45)
+
+            for art in matriz_inventario:
+                nombre = art[1]
+                stock_act = art[2]
+                cantidad_ini = art[3]
+                
+                cantidad_a_pedir = calcular_cantidad_a_pedir(stock_act, cantidad_ini)
+                print(f"{nombre:<25}{cantidad_a_pedir:<10}")
+            print("-" * 45)
+            
+            registrar_accion(nombre_usuario, "Generó el informe general de Auditoría de Pedidos.")
+
+        # -----------------------------------------------------------------
+        # ITEM 5: SALIR
+        # -----------------------------------------------------------------
+        elif opcion == "5":
+            registrar_accion(nombre_usuario, "Cerró sesión y salió del sistema.")
+            print(f"\nGracias por utilizar el Sistema de Inventario Permanente UNAD, {nombre_usuario}. ¡Hasta pronto!")
+            break
+        
+        else:
+            print("\n X Opción inválida en el menú principal. Intente de nuevo (1-5).")
+
+
+if __name__ == "__main__":
+    main()							
